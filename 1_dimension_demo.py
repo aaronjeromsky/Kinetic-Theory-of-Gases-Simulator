@@ -1,7 +1,18 @@
-import tkinter
 import math
 from random import random
 from time import sleep
+from tkinter import *
+
+# Create the window.
+window = Tk()
+window.title("Kinetic Theory of Gases Simulator")
+window.resizable(False, False)
+
+# Create the canvas.
+canvas = Canvas(window, width = 1000, height = 100) # TODO Using magic numbers, switch to variables later.
+canvas.pack()
+
+window.update # ? Is this helpful
 
 class Ball:
     def __init__(self, posX, posY, velX, velY, radius, density):
@@ -10,11 +21,11 @@ class Ball:
         self.velX = velX
         self.velY = velY
         self.radius = radius
-        # self.diameter = self.radius * 2  # do we need self.? also do we need diameter?
+        self.diameter = self.radius * 2
         self.density = density
-        self.mass = self.density * math.pi * self.radius**2
+        self.mass = self.density * math.pi * self.radius ** 2
         self.newVelX = None
-        # 15 * ( 1 + 16 + 16 ** 2 + 16 **3 + 16 ** 4 + 16 ** 5) = 16777215
+        # 15 * (1 + 16 + 16 ** 2 + 16 ** 3 + 16 ** 4 + 16 ** 5) = 16777215
         hexBlue = hex(int(density * 255))[2:]
         if len(hexBlue) == 1:
             hexBlue = "0" + hexBlue
@@ -28,7 +39,7 @@ def displayBalls(balls):
         radius = balls[i].radius * pixelToUnitRatio
         posX = balls[i].posX * pixelToUnitRatio
         posY = balls[i].posY * pixelToUnitRatio
-        # print(radius, posY, posX)
+        #print(radius, posY, posX)
         canvas.create_oval(posX - radius, posY - radius, posX + radius, posY + radius, fill = balls[i].color)
 
 # See: https://en.wikipedia.org/wiki/Elastic_collision
@@ -51,10 +62,6 @@ numBalls = 5
 balls = []
 maxRadius = 0.05
 genMaxVel = 0.4
-
-window = tkinter.Tk()
-canvas = tkinter.Canvas(window, width=pixelWidth, height=pixelHeight)
-canvas.pack()
 
 # Ball generation
 ballsStarted = 0
@@ -83,7 +90,7 @@ for i in range(int(10 / sleepTime)):  # * This should be a 10 second animation.
     canvas.create_rectangle(0, 0, pixelWidth, pixelHeight, fill = "white")
 
     # Move
-    for i in range(numBalls):  # TODO: Create better name for width
+    for i in range(numBalls): # TODO: Create better name for width
 
         if tooClose(leftSide, balls[i].posX, balls[i].radius) or tooClose(width, balls[i].posX, balls[i].radius):  # Doesn't seem to work great.
             balls[i].velX *= -1
@@ -98,7 +105,7 @@ for i in range(int(10 / sleepTime)):  # * This should be a 10 second animation.
     for ballA in range(numBalls):
 
         for ballB in range(ballA + 1, numBalls):
-            print(ballA, ballB)
+            #print(ballA, ballB)
 
             if tooClose(balls[ballA].posX, balls[ballB].posX, balls[ballA].radius + balls[ballB].radius):
 
