@@ -9,7 +9,7 @@ window.title("Kinetic Theory of Gases Simulator")
 window.resizable(False, False)
 
 # Create the canvas.
-canvas = Canvas(window, width = 1000, height = 100) # TODO Using magic numbers, switch to variables later.
+canvas = Canvas(window, width = 1000, height = 100) # TODO: Using magic numbers, switch to variables later.
 canvas.pack()
 
 window.update # ? Is this helpful
@@ -47,7 +47,7 @@ def oneDCollision(mass1, oldVel1, mass2, oldVel2):
     # TODO: Provide formating that is easier to read.
     return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 + mass2 * oldVel2 * 2 / (mass1 + mass2), (2 * mass1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
 
-sleepTime = 0.01  # Seconds
+sleepTime = 0.01  # Delay in seconds between frames
 
 width = 1
 height = 0.1
