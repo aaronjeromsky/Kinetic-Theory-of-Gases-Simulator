@@ -8,16 +8,16 @@ class Ball:
         self.posX = posX
         self.posY = posY
         self.velX = velX
-        self.velY =velY
+        self.velY = velY
         self.radius = radius
-        #self.diameter = self.radius * 2  # do we need self.? also do we need diameter?
+        # self.diameter = self.radius * 2  # do we need self.? also do we need diameter?
         self.density = density
-        self.mass = self.density * math.pi * self.radius ** 2
+        self.mass = self.density * math.pi * self.radius**2
         self.newVelX = None
-        #15 * ( 1 + 16 + 16 ** 2 + 16 **3 + 16 ** 4 + 16 ** 5) = 16777215
+        # 15 * ( 1 + 16 + 16 ** 2 + 16 **3 + 16 ** 4 + 16 ** 5) = 16777215
         hexBlue = hex(int(density * 255))[2:]
         if len(hexBlue) == 1:
-            hexBlue = '0' + hexBlue
+            hexBlue = "0" + hexBlue
         self.color = "#0000" + hexBlue
 
 def tooClose(a, b, margin):
@@ -28,15 +28,15 @@ def displayBalls(balls):
         radius = balls[i].radius * pixelToUnitRatio
         posX = balls[i].posX * pixelToUnitRatio
         posY = balls[i].posY * pixelToUnitRatio
-        #print(radius, posY, posX)
-        canvas.create_oval(posX - radius, posY - radius, posX + radius, posY + radius, fill=balls[i].color)
+        # print(radius, posY, posX)
+        canvas.create_oval(posX - radius, posY - radius, posX + radius, posY + radius, fill = balls[i].color)
 
 # See: https://en.wikipedia.org/wiki/Elastic_collision
 def oneDCollision(mass1, oldVel1, mass2, oldVel2):
-    return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 +  mass2 * oldVel2 * 2  / (mass1 + mass2), \
-            (2 * mass1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
+    # TODO: Provide formating that is easier to read.
+    return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 + mass2 * oldVel2 * 2 / (mass1 + mass2), (2 * mass1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
 
-sleepTime = 0.01 # Seconds
+sleepTime = 0.01  # Seconds
 
 width = 1
 height = 0.1
@@ -65,35 +65,35 @@ while ballsStarted < numBalls:
     clear = True
 
     # * Would accessing the radius only once be better?
-    for a in range(0,ballsStarted):
+    for a in range(0, ballsStarted):
 
-        if tooClose(potentialX, balls[a].posX, balls[a].radius + potentialRadius) or \
-            tooClose(potentialX, leftSide, balls[a].radius) or \
-            tooClose(potentialX, rightSide, balls[a].radius):
+        if (tooClose(potentialX, balls[a].posX, balls[a].radius + potentialRadius) or tooClose(potentialX, leftSide, balls[a].radius) or tooClose(potentialX, rightSide, balls[a].radius)):
             clear = False
 
     if clear:
-        balls.append(Ball(potentialX, 0.05, (2 * (random()-0.5) * genMaxVel), 0, potentialRadius, random()))
-        ballsStarted += 1 # Needs to be at the end for the above math.
+        balls.append(Ball(potentialX, 0.05, (2 * (random() - 0.5) * genMaxVel), 0, potentialRadius, random()))
+        ballsStarted += 1  # Needs to be at the end for the above math.
 
 displayBalls(balls)
 
 # Animate
-for i in range(int(10 / sleepTime)): # * This should be a 10 second animation.
+for i in range(int(10 / sleepTime)):  # * This should be a 10 second animation.
+
     # Erase
-    canvas.create_rectangle(0, 0, pixelWidth, pixelHeight, fill='white')
+    canvas.create_rectangle(0, 0, pixelWidth, pixelHeight, fill = "white")
 
     # Move
-    for i in range(numBalls): #need better var name for width?
-        if tooClose(leftSide, balls[i].posX, balls[i].radius) or tooClose(width, balls[i].posX, balls[i].radius):  # doesn't seem to work great
+    for i in range(numBalls):  # TODO: Create better name for width
+
+        if tooClose(leftSide, balls[i].posX, balls[i].radius) or tooClose(width, balls[i].posX, balls[i].radius):  # Doesn't seem to work great.
             balls[i].velX *= -1
-            
+
         # * Should it move here too?
         # * This is occuring more often than it needs to be, but this may be useful later
-        balls[i].posX += balls[i].velX * sleepTime # Which is pixels moved per tick.
+        balls[i].posX += balls[i].velX * sleepTime  # Which is pixels moved per tick.
 
     sleep(sleepTime)
-    
+
     # Check for and calculate collision.
     for ballA in range(numBalls):
 
@@ -101,6 +101,7 @@ for i in range(int(10 / sleepTime)): # * This should be a 10 second animation.
             print(ballA, ballB)
 
             if tooClose(balls[ballA].posX, balls[ballB].posX, balls[ballA].radius + balls[ballB].radius):
+
                 newVelXA, newVelXB = oneDCollision(balls[ballA].mass, balls[ballA].velX, balls[ballB].mass, balls[ballB].velX)
 
                 if balls[ballA].newVelX == None:
@@ -114,13 +115,15 @@ for i in range(int(10 / sleepTime)): # * This should be a 10 second animation.
                     balls[ballB].newVelX += newVelXB
 
     # TODO: I think this whole thing probably needs better boolean zen.
-    # Update velocity.
+    # Update velocity
     for i in range(numBalls):
+
         if balls[i].newVelX != None:
             balls[i].velX = balls[i].newVelX
+
         balls[i].newVelX = None
-   
-    #redraw
+
+    # Redraw
     displayBalls(balls)
     window.update()
 
