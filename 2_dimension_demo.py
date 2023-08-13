@@ -7,13 +7,13 @@ from particles import *
 #TODO: create a ui so that the user can set some of these variables to whatever they want
 #e.g. d, bounds, actual windowsize?, numBalls, maxRadius, genMaxVel, 
 
-def display2DBalls():
-        #TODO if we still use tKinter we need to not draw ovals on top of each other forever
+#currently geeting a bounding box error; only on the display side of things though.
+
+def update2DBallsDisplay():
         for i in range(numBalls):
-            radius = balls[i].radius * pixelToUnitRatio
             posX = balls[i].pos[0] * pixelToUnitRatio
             posY = balls[i].pos[1] * pixelToUnitRatio
-            canvas.create_oval(posX - radius, posY - radius, posX + radius, posY + radius, fill = balls[i].color)
+            canvas.moveto(balls[i].image, 10 + posX - balls[i].radiusPixels, 10 + posY - balls[i].radiusPixels) #moveto uses the top left corner of the oval for its coords
 
 #set up variables
 sleepTime = 0.01  # Delay in seconds between frames
@@ -32,25 +32,33 @@ pixelHeight = height * pixelToUnitRatio
 pixelWidth = width * pixelToUnitRatio
 leftSide = 0
 rightSide = pixelWidth
-numBalls = 50
+numBalls = 100
 balls = []
-maxRadius = 1
-genMaxVel = 1 #maximum velocity that will be generated
+maxRadius = 0.5
+genMaxVel = 0.5 #maximum velocity that will be generated
 
 # Create the window and canvas
 window = Tk()
 window.title("Kinetic Theory of Gases Simulator")
 window.resizable(False, False)
-canvas = Canvas(window, width = pixelWidth, height = pixelHeight)
+canvas = Canvas(window, width = pixelWidth + 20, height = pixelHeight + 20)
+canvas.create_rectangle(10, 10, pixelWidth + 10, pixelHeight + 10, )
 canvas.pack()
 
 #get particles started
 window.update # ? Is this helpful
-generateBalls(balls, d, bounds, numBalls, maxRadius, genMaxVel)
-display2DBalls() #display initial state
+generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadius, genMaxVel)
+update2DBallsDisplay() #display initial state
 
 # main loop
-while True:
+def handler():
+    #see https://stackoverflow.com/questions/65643645/tkinter-tclerror-invalid-command-name-canvas
+    global run
+    run = False
+
+window.protocol("WM_DELETE_WINDOW", handler)
+run = True
+while run:
 
     # Move
     for i in range(numBalls): # TODO: 
@@ -69,7 +77,8 @@ while True:
 
     # no collitions in this version
 
-    # Redraw
-    canvas.create_rectangle(0, 0, pixelWidth, pixelHeight, fill = "white")
-    display2DBalls()
+    # Redraw with new positions
+    update2DBallsDisplay()
     window.update()
+
+window.destroy()

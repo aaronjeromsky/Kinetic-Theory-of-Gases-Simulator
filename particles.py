@@ -2,10 +2,11 @@ from random import random
 import math
 
 class Ball:
-    def __init__(self, pos, vel, radius, density):
+    def __init__(self, canvas, pixelToUnitRatio, pos, vel, radius, density):
         self.pos = pos
         self.vel = vel # pos and vel are vectors with dimension d
         self.radius = radius
+        self.diameter = self.radius * 2 #does using radius vs self.radius matter?
         self.density = density
         self.mass = self.density * math.pi * self.radius ** 2
         self.newVelX = None #TODO this system isn't very good
@@ -14,6 +15,14 @@ class Ball:
         if len(hexBlue) == 1:
             hexBlue = "0" + hexBlue
         self.color = "#0000" + hexBlue
+
+        self.canvas = canvas
+        #the following only works for 2d
+        self.radiusPixels = self.radius * pixelToUnitRatio
+        self.diameterPixels = self.radiusPixels * 2
+        self.image = self.canvas.create_oval(0, 0, self.diameterPixels, self.diameterPixels, fill=self.color)
+        #would there be a way to deallocate self.diameterPixels? is that already done automagically?
+        
 
     def oneDCollision(mass1, oldVel1, mass2, oldVel2):
         # See: https://en.wikipedia.org/wiki/Elastic_collision
@@ -26,7 +35,7 @@ def tooClose(pos1, pos2, radius1, radius2, dim=2): #a and b should be vectors of
             sum += (abs(pos1[i] - pos2[i])) ** 2
         return math.sqrt(sum) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
 
-def generateBalls(balls, d, bounds, numBalls, maxRadius, genMaxVel):
+def generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadius, genMaxVel):
     ballsStarted = 0
     while ballsStarted < numBalls:
         #generate values for a potential new ball    
@@ -50,5 +59,5 @@ def generateBalls(balls, d, bounds, numBalls, maxRadius, genMaxVel):
 
         #create the new ball if conditions are right
         if clear:
-            balls.append(Ball(potentialPos, [(2 * (random() - 0.5) * genMaxVel), (2 * (random() - 0.5) * genMaxVel)], potentialRadius, random()))
+            balls.append(Ball(canvas, pixelToUnitRatio, potentialPos, [(2 * (random() - 0.5) * genMaxVel), (2 * (random() - 0.5) * genMaxVel)], potentialRadius, random()))
             ballsStarted += 1  # Needs to be at the end for the above math.
