@@ -6,7 +6,7 @@ class Ball:
     def __init__(self, canvas, pixelToUnitRatio, pos, vel, radius, density):
 
         self.radius = radius
-        self.diameter = radius << 1
+        self.diameter = radius * 2
 
         self.density = density
         self.mass = self.density * pi * self.radius ** 2
@@ -25,7 +25,7 @@ class Ball:
 
         # Below code is only applicable in a 2-dimensional environment.
         self.radiusPixels = self.radius * pixelToUnitRatio
-        self.diameterPixels = self.radiusPixels << 1 # ? Is there be a way to deallocate 'self.diameterPixels'? Is that done automatically?
+        self.diameterPixels = self.radiusPixels * 2 # ? Is there be a way to deallocate 'self.diameterPixels'? Is that done automatically?
 
         self.canvas = canvas
         self.image = self.canvas.create_oval(0, 0, self.diameterPixels, self.diameterPixels, fill = self.color)
@@ -34,7 +34,7 @@ class Ball:
 def oneDCollision(mass1, mass2, oldVel1, oldVel2): # ! Parameters were rearranged, keep this in mind.
 
     # See: https://en.wikipedia.org/wiki/Elastic_collision
-    return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 + mass2 * oldVel2 << 1 / (mass1 + mass2), (mass1 << 1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
+    return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 + mass2 * oldVel2 * 2 / (mass1 + mass2), (2 * mass1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
 
 def tooClose(pos1, pos2, radius1, radius2, dimension = 2): # a and b should be vectors of dimension  # ? What order should the arguments be in?
 

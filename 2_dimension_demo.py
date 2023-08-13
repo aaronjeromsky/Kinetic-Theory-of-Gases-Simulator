@@ -1,72 +1,83 @@
 from random import random
-from math import pi, sqrt
+from time import sleep
+from tkinter import Canvas, Tk
+from particles import generateBalls
 
-class Ball:
+# TODO: create a ui so that the user can set some of these variables to whatever they want
+# e.g. dimension, bounds, actual window size?, numBalls, maxRadius, genMaxVel, 
 
-    def __init__(self, canvas, pixelToUnitRatio, pos, vel, radius, density):
+# currently getting a bounding box error; only on the display side of things though.
 
-        self.radius = radius
-        self.diameter = radius << 1
+def update2DBallsDisplay():
+        for i in range(numBalls):
+            posX = balls[i].pos[0] * pixelToUnitRatio
+            posY = balls[i].pos[1] * pixelToUnitRatio
+            canvas.moveto(balls[i].image, 10 + posX - balls[i].radiusPixels, 10 + posY - balls[i].radiusPixels) #moveto uses the top left corner of the oval for its coords
 
-        self.density = density
-        self.mass = self.density * pi * self.radius ** 2
+#set up variables
+sleepTime = 0.01  # Delay in seconds between frames
+dimension = 2
+bounds = [] # it will be a rectangle, rectangular prism, etc
+sizes = []
+for i in range(dimension):
+    #this s makes a 1 by 1 box, but this should be something the user can change?
+    #for now it's [[0, 1], [0, 1]]
+     bounds.append([0, 1])
+     sizes.append(abs(bounds[i][1] - bounds[i][0]))
+width = sizes[0]
+height = sizes[1]
+pixelToUnitRatio = 500
+pixelHeight = height * pixelToUnitRatio
+pixelWidth = width * pixelToUnitRatio
+leftSide = 0
+rightSide = pixelWidth
+numBalls = 100
+balls = []
+maxRadius = 0.5
+genMaxVel = 0.5 #maximum velocity that will be generated
 
-        # Position and velocity are vectors with dimension d.
-        self.pos = pos
-        self.vel = vel
-        self.newVelX = None #TODO this system isn't very good
+# Create the window and canvas
+window = Tk()
+window.title("Kinetic Theory of Gases Simulator")
+window.resizable(False, False)
+canvas = Canvas(window, width = pixelWidth + 20, height = pixelHeight + 20)
+canvas.create_rectangle(10, 10, pixelWidth + 10, pixelHeight + 10, )
+canvas.pack()
 
-        # 15 * (1 + 16 + 16 ** 2 + 16 ** 3 + 16 ** 4 + 16 ** 5) = 16777215
+#get particles started
+generateBalls(canvas, pixelToUnitRatio, balls, dimension, bounds, numBalls, maxRadius, genMaxVel)
+update2DBallsDisplay() #display initial state
 
-        hexBlue = hex(int(density * 255))[2:]
-        if len(hexBlue) == 1:
-            hexBlue = "0" + hexBlue
-        self.color = "#0000" + hexBlue
+def handler():
+    # See: https://stackoverflow.com/questions/65643645/tkinter-tclerror-invalid-command-name-canvas
+    global run
+    run = False
 
-        # Below code is only applicable in a 2-dimensional environment.
-        self.radiusPixels = self.radius * pixelToUnitRatio
-        self.diameterPixels = self.radiusPixels << 1 # ? Is there be a way to deallocate 'self.diameterPixels'? Is that done automatically?
+window.protocol("WM_DELETE_WINDOW", handler)
+run = True
 
-        self.canvas = canvas
-        self.image = self.canvas.create_oval(0, 0, self.diameterPixels, self.diameterPixels, fill = self.color)
-        
+# Main loop
+while run:
 
-def oneDCollision(mass1, mass2, oldVel1, oldVel2): # ! Parameters were rearranged, keep this in mind.
+    # Move
+    for i in range(numBalls): # TODO: 
 
-    # See: https://en.wikipedia.org/wiki/Elastic_collision
-    return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 + mass2 * oldVel2 << 1 / (mass1 + mass2), (mass1 << 1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
+        # If a ball is out of bounds, reverse velocity
+        for dim in range(dimension):
+            if balls[i].pos[dim] + balls[i].radius > bounds[dim][1] or balls[i].pos[dim] - balls[i].radius < bounds[dim][0]: #would it be better to have a variable reference Ball[i]? idk
+                balls[i].vel[dim] *= -1
 
-def tooClose(pos1, pos2, radius1, radius2, dimension = 2): # a and b should be vectors of dimension  # ? What order should the arguments be in?
+        # * Should it move here too?
+        # * This is occurring more often than it needs to be, but this may be useful later
+        balls[i].pos[0] += balls[i].vel[0] * sleepTime  # pixels moved per tick.
+        balls[i].pos[1] += balls[i].vel[1] * sleepTime
 
-        # i put this outside of the ball class because i want to it to be able to be used in generateBalls before actually generating ball objects
-        sum = 0
-        for i in range(dimension):
-            sum += (abs(pos1[i] - pos2[i])) ** 2
-        return sqrt(sum) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
+    sleep(sleepTime)
 
-def generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadius, genMaxVel):
-    ballsStarted = 0
-    while ballsStarted < numBalls:
-        #generate values for a potential new ball    
-        potentialPos = []
-        for i in range(d):
-            potentialPos.append(random())
-        potentialRadius = random() * maxRadius
-        clear = True #I considered using continue, but i don't know how that would work with nested loops
+    # no collisions in this version
 
-        #check that the ball is in bounds
-        for dimension in range(d):  #integrate this with the boundary checking during animation?
-            if potentialPos[dimension] + potentialRadius > bounds[dimension][1] or potentialPos[dimension] - potentialRadius < bounds[dimension][0]: #would it be better to have a variable reference Ball[i]? idk
-                clear = False #what do you think about using continue ?
-            # * Would accessing the radius only once be better?
+    # Redraw with new positions
+    update2DBallsDisplay()
+    window.update()
 
-        #check that the ball isn't touching an already placed ball
-        for otherBallIndex in range(0, ballsStarted):
-            if tooClose(potentialPos, balls[otherBallIndex].pos, potentialRadius, balls[otherBallIndex].radius):
-                clear = False
-                break
-            
-        #create the new ball if conditions are right
-        if clear:
-            balls.append(Ball(canvas, pixelToUnitRatio, potentialPos, [(2 * (random() - 0.5) * genMaxVel), (2 * (random() - 0.5) * genMaxVel)], potentialRadius, random()))
-            ballsStarted += 1  # Needs to be at the end for the above math.
+window.destroy()
