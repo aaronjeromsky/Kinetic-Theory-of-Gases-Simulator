@@ -2,12 +2,11 @@ import random as ra
 import math as ma
 
 class Ball:
-
     def __init__(self, canvas, pixelToUnitRatio, pos, vel, radius, density):
-
+        self.pos = pos
+        self.vel = vel # pos and vel are vectors with dimension d
         self.radius = radius
-        self.diameter = radius * 2
-
+        self.diameter = self.radius * 2 #does using radius vs self.radius matter?
         self.density = density
         self.mass = self.density * ma.pi * self.radius ** 2
 
@@ -15,15 +14,14 @@ class Ball:
         self.pos = pos
         self.vel = vel
         self.newVelX = None #TODO this system isn't very good
-
         # 15 * (1 + 16 + 16 ** 2 + 16 ** 3 + 16 ** 4 + 16 ** 5) = 16777215
-
         hexBlue = hex(int(density * 255))[2:]
         if len(hexBlue) == 1:
             hexBlue = "0" + hexBlue
         self.color = "#0000" + hexBlue
 
-        # Below code is only applicable in a 2-dimensional environment.
+        self.canvas = canvas
+        #the following only works for 2d
         self.radiusPixels = self.radius * pixelToUnitRatio
         self.diameterPixels = self.radiusPixels * 2 # ? Is there be a way to deallocate 'self.diameterPixels'? Is that done automatically?
 
@@ -38,7 +36,7 @@ def tooClose(pos1, pos2, radius1, radius2, dimension = 2): # a and b should be v
 
         # i put this outside of the ball class because i want to it to be able to be used in generateBalls before actually generating ball objects
         sum = 0
-        for i in range(dimension):
+        for i in range(dim):
             sum += (abs(pos1[i] - pos2[i])) ** 2
         return ma.sqrt(sum) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
 
@@ -54,8 +52,8 @@ def generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadiu
         clear = True #I considered using continue, but i don't know how that would work with nested loops
 
         #check that the ball is in bounds
-        for dimension in range(d):  #integrate this with the boundary checking during animation?
-            if potentialPos[dimension] + potentialRadius > bounds[dimension][1] or potentialPos[dimension] - potentialRadius < bounds[dimension][0]: #would it be better to have a variable reference Ball[i]? idk
+        for dim in range(d):  #integrate this with the boundary checking during animation?
+            if potentialPos[dim] + potentialRadius > bounds[dim][1] or potentialPos[dim] - potentialRadius < bounds[dim][0]: #would it be better to have a variable reference Ball[i]? idk
                 clear = False #what do you think about using continue ?
             # * Would accessing the radius only once be better?
 
