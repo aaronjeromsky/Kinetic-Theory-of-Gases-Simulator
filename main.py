@@ -10,7 +10,7 @@ numBalls = 100
 maxRadius = 0.5
 genMaxVel = 0.5
 
-statistics_window = tk.Tk()
+statistics_window = tk.Tk() # How does window priority work? Also can you close at the same time?
 simulation_window = tk.Toplevel()
 
 statistics_object = st.Statistics(statistics_window, testVariable)
@@ -30,7 +30,6 @@ def updateSimulation():
 
     simulation_object.update()
     simulation_window.after(10, updateSimulation)
-
 
 if __name__ == '__main__':
 

@@ -57,16 +57,18 @@ class Simulation:
 
             # If a ball is out of bounds, reverse velocity
             for dim in range(self.dimension):
-                # Would it be better to have a variable reference Ball[i]? idk
+                # ? Would it be better to have a variable reference Ball[i]? idk
+                # Collision with the walls
                 if self.balls[i].pos[dim] + self.balls[i].radius > self.bounds[dim][1] or self.balls[i].pos[dim] - self.balls[i].radius < self.bounds[dim][0]:
                     self.balls[i].vel[dim] *= -1
 
-            # Should it move here too?
-            # This is occurring more often than it needs to be, but this may be useful later
+            # ? Should it move here too?
+            # ? This is occurring more often than it needs to be, but this may be useful later
+            # Changes the positon based on vleocity per unit time.
             self.balls[i].pos[0] += self.balls[i].vel[0] * self.secondsPerTick # Change the ball position by the velocity
             self.balls[i].pos[1] += self.balls[i].vel[1] * self.secondsPerTick # pos[0] = x, pos[1] = y  (units / sec) * (sec / tick) = units / tick
 
-        # Update ball position
+        # Display the new ball positions
         for i in range(self.numBalls):
             posX = self.balls[i].pos[0] * self.pixelToUnitRatio
             posY = self.balls[i].pos[1] * self.pixelToUnitRatio
