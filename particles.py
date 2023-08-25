@@ -1,5 +1,5 @@
-from random import random
-from math import pi, sqrt
+import random as ra
+import math as ma
 
 class Ball:
 
@@ -9,7 +9,7 @@ class Ball:
         self.diameter = radius * 2
 
         self.density = density
-        self.mass = self.density * pi * self.radius ** 2
+        self.mass = self.density * ma.pi * self.radius ** 2
 
         # Position and velocity are vectors with dimension d.
         self.pos = pos
@@ -29,10 +29,8 @@ class Ball:
 
         self.canvas = canvas
         self.image = self.canvas.create_oval(0, 0, self.diameterPixels, self.diameterPixels, fill = self.color)
-        
 
-def oneDCollision(mass1, mass2, oldVel1, oldVel2): # ! Parameters were rearranged, keep this in mind.
-
+def oneDCollision(mass1, mass2, oldVel1, oldVel2):
     # See: https://en.wikipedia.org/wiki/Elastic_collision
     return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 + mass2 * oldVel2 * 2 / (mass1 + mass2), (2 * mass1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
 
@@ -42,16 +40,17 @@ def tooClose(pos1, pos2, radius1, radius2, dimension = 2): # a and b should be v
         sum = 0
         for i in range(dimension):
             sum += (abs(pos1[i] - pos2[i])) ** 2
-        return sqrt(sum) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
+        return ma.sqrt(sum) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
 
 def generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadius, genMaxVel):
+
     ballsStarted = 0
     while ballsStarted < numBalls:
-        #generate values for a potential new ball    
+        # generate values for a potential new ball
         potentialPos = []
         for i in range(d):
-            potentialPos.append(random())
-        potentialRadius = random() * maxRadius
+            potentialPos.append(ra.random())
+        potentialRadius = ra.random() * maxRadius
         clear = True #I considered using continue, but i don't know how that would work with nested loops
 
         #check that the ball is in bounds
@@ -65,8 +64,8 @@ def generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadiu
             if tooClose(potentialPos, balls[otherBallIndex].pos, potentialRadius, balls[otherBallIndex].radius):
                 clear = False
                 break
-            
+
         #create the new ball if conditions are right
         if clear:
-            balls.append(Ball(canvas, pixelToUnitRatio, potentialPos, [(2 * (random() - 0.5) * genMaxVel), (2 * (random() - 0.5) * genMaxVel)], potentialRadius, random()))
+            balls.append(Ball(canvas, pixelToUnitRatio, potentialPos, [(2 * (ra.random() - 0.5) * genMaxVel), (2 * (ra.random() - 0.5) * genMaxVel)], potentialRadius, ra.random()))
             ballsStarted += 1  # Needs to be at the end for the above math.
