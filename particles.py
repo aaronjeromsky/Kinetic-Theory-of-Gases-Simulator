@@ -1,5 +1,6 @@
 import random as ra
 import math as ma
+import numpy as np
 
 class Ball:
 
@@ -10,7 +11,7 @@ class Ball:
         self.radius = radius
         self.diameter = self.radius * 2 #does using radius vs self.radius matter?
         self.density = density
-        self.mass = self.density * ma.pi * self.radius ** 2
+        self.mass = self.density * ma.pi * (self.radius ** 2)
 
         # Position and velocity are vectors with dimension d.
         self.pos = pos
@@ -29,35 +30,34 @@ class Ball:
 
         self.canvas = canvas
         self.image = self.canvas.create_oval(0, 0, self.diameterPixels, self.diameterPixels, fill = self.color)
+        #self.numText = self.canvas.create_text(0, 0, text=str(number))
 
-def oneDCollision(mass1, mass2, oldVel1, oldVel2):
-
+def vel1AfterCollision(ball1, ball2):
     # See: https://en.wikipedia.org/wiki/Elastic_collision
-    return ((mass1 - mass2) / (mass1 + mass2)) * oldVel1 + mass2 * oldVel2 * 2 / (mass1 + mass2), (2 * mass1 / (mass1 + mass2)) * oldVel1 + ((mass2 - mass1) / (mass1 + mass2)) * oldVel2
+    # and https://stackoverflow.com/questions/9171158/how-do-you-get-the-magnitude-of-a-vector-in-numpy
+    displacementBtwnCenters = ball1.pos - ball2.pos #shorter var name would be nice
+    return ball1.vel - (2 * ball2.mass * np.dot(ball1.vel - ball2.vel, displacementBtwnCenters) * displacementBtwnCenters) / ((ball1.mass + ball2.mass) * (np.linalg.norm(displacementBtwnCenters) ** 2))
 
 def tooClose(pos1, pos2, radius1, radius2, dimension = 2): # a and b should be vectors of dimension  # ? What order should the arguments be in?
-
+        # the arguments aren't the balls themselves, so that generate Balls can use this, maybe change that later?
         # i put this outside of the ball class because i want to it to be able to be used in generateBalls before actually generating ball objects
-        sum = 0
-
-        for i in range(dimension):
-            sum += (abs(pos1[i] - pos2[i])) ** 2
-
-        return ma.sqrt(sum) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
+        return np.linalg.norm(pos1 - pos2) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
 
 def generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadius, genMaxVel):
+
+    minRadius = maxRadius * 0.2
 
     ballsStarted = 0
 
     while ballsStarted < numBalls:
 
         # generate values for a potential new ball
-        potentialPos = []
+        potentialPos = np.zeros(d)
 
         for i in range(d):
-            potentialPos.append(ra.random())
+            potentialPos[i] = ra.random()
 
-        potentialRadius = ra.random() * maxRadius
+        potentialRadius = minRadius + ra.random() * (maxRadius - minRadius)
         clear = True #I considered using continue, but i don't know how that would work with nested loops
 
         #check that the ball is in bounds
@@ -77,5 +77,11 @@ def generateBalls(canvas, pixelToUnitRatio, balls, d, bounds, numBalls, maxRadiu
         #create the new ball if conditions are right
         if clear:
 
-            balls.append(Ball(canvas, pixelToUnitRatio, potentialPos, [(2 * (ra.random() - 0.5) * genMaxVel), (2 * (ra.random() - 0.5) * genMaxVel)], potentialRadius, ra.random()))
+            #generate a random ndimensional velocity
+            newVel = np.zeros(d) # creates a d long array full of zeros
+            for v in range(d):
+                newVel[v] = 2 * (ra.random() - 0.5) * genMaxVel
+                #newVel[v] = genMaxVel
+            #density 0.2 + ra.random() * 0.8
+            balls.append(Ball(canvas, pixelToUnitRatio, potentialPos, newVel, potentialRadius, 1))
             ballsStarted += 1  # Needs to be at the end for the above math.

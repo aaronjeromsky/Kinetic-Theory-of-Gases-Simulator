@@ -17,7 +17,7 @@ class Statistics:
         window.geometry('240x480')
         window.title('Statistics')
         window.config(background='#FFFFFF')
-        icon = tk.PhotoImage(file='icon.png')
+        icon = tk.PhotoImage(file='Kinetic-Theory-of-Gases-Simulator\icon.png')
         window.iconphoto(True, icon)
 
     # try the after method for updating

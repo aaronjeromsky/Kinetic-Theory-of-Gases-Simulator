@@ -3,12 +3,13 @@ import simulation_window as si
 import statistics_window as st
 
 testVariable = 100
-secondsPerTick = 0.01
+milliSecPerTick = 1
+secondsPerTick = milliSecPerTick / 1000
 dimension = 2
 pixelToUnitRatio = 500
-numBalls = 100
-maxRadius = 0.5
-genMaxVel = 0.5
+numBalls = 7
+maxRadius = 0.1
+genMaxVel = 1
 
 statistics_window = tk.Tk() # How does window priority work? Also can you close at the same time?
 simulation_window = tk.Toplevel()
@@ -24,16 +25,16 @@ def updateStatistics():
     testVariable += 1
 
     statistics_object.update(testVariable)
-    statistics_window.after(1000, updateStatistics)
+    statistics_window.after(1000, updateStatistics)  
 
 def updateSimulation():
 
     simulation_object.update()
-    simulation_window.after(10, updateSimulation)
+    simulation_window.after(milliSecPerTick, updateSimulation)    # 1000 = 1 sec
 
 if __name__ == '__main__':
 
-    simulation_window.after(10, updateSimulation)
+    simulation_window.after(milliSecPerTick, updateSimulation)
     statistics_window.after(1000, updateStatistics)
 
     simulation_window.mainloop()
