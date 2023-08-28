@@ -5,7 +5,8 @@ import variables as va
 
 class Ball:
 
-    def __init__(self, canvas, position, velocity, radius, density):
+    # TODO: make color an optional argument.
+    def __init__(self, canvas, position, velocity, radius, density, color):
 
         # Parameters
 
@@ -17,13 +18,12 @@ class Ball:
         self.density = density
         self.mass = density * ma.pi * (radius ** 2)
 
-        # Ball color
-        blue_hex = hex(int(density * 255))[2:]
-
-        if len(blue_hex) == 1:
-            blue_hex = "0" + blue_hex
-
-        self.color = "#0000" + blue_hex
+        # Color
+        if (color is None or color == ''):
+            color_value = lambda : ra.randint(0,255)
+            self.color = '#{:02x}{:02x}{:02x}'.format(color_value(), color_value(), color_value())
+        else:
+            self.color = color
 
         # The following couple lines only work in a 2D environment.
         self.pixel_radius = self.radius * va.pixel_to_unit_ratio
@@ -37,9 +37,9 @@ def vel1AfterCollision(ball1, ball2):
 
     # See: https://en.wikipedia.org/wiki/Elastic_collision
     # and https://stackoverflow.com/questions/9171158/how-do-you-get-the-magnitude-of-a-vector-in-numpy
-    dist_btwn_centers = ball1.position - ball2.position #shorter var name would be nice
+    disp_btwn_centers = ball1.position - ball2.position
 
-    return ball1.velocity - (2 * ball2.mass * np.dot(ball1.velocity - ball2.velocity, dist_btwn_centers) * dist_btwn_centers) / ((ball1.mass + ball2.mass) * (np.linalg.norm(dist_btwn_centers) ** 2))
+    return ball1.velocity - (2 * ball2.mass * np.dot(ball1.velocity - ball2.velocity, disp_btwn_centers) * disp_btwn_centers) / ((ball1.mass + ball2.mass) * (np.linalg.norm(disp_btwn_centers) ** 2))
 
 # TODO: 'a' and 'b' should be vectors of 'dimension'
 # ? What order should the arguments be in?
@@ -50,9 +50,9 @@ def tooClose(position1, position2, radius1, radius2):
         # How much margin do we need for things not to phase into each other?
         return np.linalg.norm(position1 - position2) <= radius1 + radius2
 
-def place_ball(self, canvas, position, velocity, radius, density):
+def place_ball(self, canvas, position, velocity, radius, density, color):
 
-    self.balls.append(Ball(canvas, position, velocity, radius, density))
+    self.balls.append(Ball(canvas, position, velocity, radius, density, color))
 
 def generateBalls(canvas, balls, bounds):
 
@@ -97,5 +97,5 @@ def generateBalls(canvas, balls, bounds):
                 #new_velocity[v] = va.maximum_velocity
 
             #density 0.2 + ra.random() * 0.8
-            balls.append(Ball(canvas, potential_position, new_velocity, potential_radius, 1))
+            balls.append(Ball(canvas, potential_position, new_velocity, potential_radius, 1, None))
             balls_started += 1  # Needs to be at the end for the above math.

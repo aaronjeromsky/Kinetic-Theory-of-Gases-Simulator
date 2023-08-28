@@ -63,7 +63,7 @@ class Simulation:
         y_coordinate = event.y
 
         # Adapt to numpy
-        pa.place_ball(self, self.canvas, np.array([x_coordinate / va.pixel_to_unit_ratio, y_coordinate / va.pixel_to_unit_ratio]), np.array([0.1, 0.1]), 0.1, 0.5)
+        pa.place_ball(self, self.canvas, np.array([x_coordinate / va.pixel_to_unit_ratio, y_coordinate / va.pixel_to_unit_ratio]), np.array([0.1, 0.1]), 0.1, 1, None)
         va.number_of_balls += 1
 
     # Main operation
@@ -82,7 +82,8 @@ class Simulation:
                     self.balls[i].velocity[dim] *= -1
 
             # Test and effect collisions
-            for outer in range(va.number_of_balls): # These two loops look at every possible pair of balls
+            # TODO: calculate collision wihtout checking every ball at once.
+            for outer in range(va.number_of_balls):
 
                 for inner in range(outer + 1, va.number_of_balls):  # + 1 so that it won't compare a ball against itself
 
