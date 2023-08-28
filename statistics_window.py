@@ -1,24 +1,17 @@
 import tkinter as tk
+import variables as va
 
 class Statistics:
 
-    def __init__(self, window, seconds_per_tick, dimension, pixel_to_unit_ratio, number_of_balls, maximum_radius, maximum_velocity):
-
-        # Variables
-        self.seconds_per_tick = seconds_per_tick
-        self.dimension = dimension
-        self.pixel_to_unit_ratio = pixel_to_unit_ratio
-        self.number_of_balls = number_of_balls
-        self.maximum_radius = maximum_radius
-        self.maximum_velocity = maximum_velocity
+    def __init__(self, window):
 
         # Window
         self.window = window
 
-        ww = 300
-        wh = 400
         sw = window.winfo_screenwidth()
         sh = window.winfo_screenheight()
+        ww = 300
+        wh = 400
 
         x = (sw / 2) - (ww / 2) - 250
         y = (sh / 2) - (wh / 2)
@@ -31,12 +24,12 @@ class Statistics:
         window.iconphoto(True, icon)
 
         # Labels
-        self.stat1label = tk.Label(self.window, text="Second per tick: " + str(seconds_per_tick), font=('Arial', 16), borderwidth=1, relief=tk.SOLID)
-        self.stat2label = tk.Label(self.window, text="Dimension: " + str(dimension), font=('Arial', 16), borderwidth=1, relief=tk.SOLID)
-        self.stat3label = tk.Label(self.window, text="Pixel to unit ratio: " + str(pixel_to_unit_ratio), font=('Arial', 16), borderwidth=1, relief=tk.SOLID)
-        self.stat4label = tk.Label(self.window, text="Number of balls: " + str(number_of_balls), font=('Arial', 16), borderwidth=1, relief=tk.SOLID)
-        self.stat5label = tk.Label(self.window, text="Maximum radius: " + str(maximum_radius), font=('Arial', 16), borderwidth=1, relief=tk.SOLID)
-        self.stat6label = tk.Label(self.window, text="Maximum velocity: " + str(maximum_velocity), font=('Arial', 16), borderwidth=1, relief=tk.SOLID)
+        self.stat1label = tk.Label(self.window, text="Seconds per tick: "    + str(va.seconds_per_tick),    font=('Consolas', 16), borderwidth=1, relief=tk.SOLID)
+        self.stat2label = tk.Label(self.window, text="Dimension: "           + str(va.dimension),           font=('Consolas', 16), borderwidth=1, relief=tk.SOLID)
+        self.stat3label = tk.Label(self.window, text="Pixel to unit ratio: " + str(va.pixel_to_unit_ratio), font=('Consolas', 16), borderwidth=1, relief=tk.SOLID)
+        self.stat4label = tk.Label(self.window, text="Number of balls: "     + str(va.number_of_balls),     font=('Consolas', 16), borderwidth=1, relief=tk.SOLID)
+        self.stat5label = tk.Label(self.window, text="Maximum radius: "      + str(va.maximum_radius),      font=('Consolas', 16), borderwidth=1, relief=tk.SOLID)
+        self.stat6label = tk.Label(self.window, text="Maximum velocity: "    + str(va.maximum_velocity),    font=('Consolas', 16), borderwidth=1, relief=tk.SOLID)
 
         # Positions
         self.stat1label.place(x=0, y=0)
@@ -46,20 +39,12 @@ class Statistics:
         self.stat5label.place(x=0, y=112)
         self.stat6label.place(x=0, y=140)
 
-    def update(self, seconds_per_tick, dimension, pixel_to_unit_ratio, number_of_balls, maximum_radius, maximum_velocity):
-
-        # Variables
-        self.seconds_per_tick = seconds_per_tick
-        self.dimension = dimension
-        self.pixel_to_unit_ratio = pixel_to_unit_ratio
-        self.number_of_balls = number_of_balls
-        self.maximum_radius = maximum_radius
-        self.maximum_velocity = maximum_velocity
+    def update(self):
 
         # Labels
-        self.stat1label['text'] = "Second per tick: " + str(seconds_per_tick)
-        self.stat2label['text'] = "Dimension: " + str(dimension)
-        self.stat3label['text'] = "Pixel to unit ratio: " + str(pixel_to_unit_ratio)
-        self.stat4label['text'] = "Number of balls: " + str(number_of_balls)
-        self.stat5label['text'] = "Maximum radius: " + str(maximum_radius)
-        self.stat6label['text'] = "Maximum velocity: " + str(maximum_velocity)
+        self.stat1label['text'] = "Seconds per tick: "    + str(va.seconds_per_tick)
+        self.stat2label['text'] = "Dimension: "           + str(va.dimension)
+        self.stat3label['text'] = "Pixel to unit ratio: " + str(va.pixel_to_unit_ratio)
+        self.stat4label['text'] = "Number of balls: "     + str(va.number_of_balls)
+        self.stat5label['text'] = "Maximum radius: "      + str(va.maximum_radius)
+        self.stat6label['text'] = "Maximum velocity: "    + str(va.maximum_velocity)

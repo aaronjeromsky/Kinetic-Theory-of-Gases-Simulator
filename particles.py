@@ -1,13 +1,11 @@
 import random as ra
 import math as ma
 import numpy as np
-
-# Multiplication is faster than to exponentiation (except ** 2 and massive values), use this to optimize code.
-# See: https://stackoverflow.com/questions/18453771/why-is-x3-slower-than-xxx/18453999#18453999
+import variables as va
 
 class Ball:
 
-    def __init__(self, canvas, pixel_to_unit_ratio, position, velocity, radius, density):
+    def __init__(self, canvas, position, velocity, radius, density):
 
         # Parameters
 
@@ -28,7 +26,7 @@ class Ball:
         self.color = "#0000" + blue_hex
 
         # The following couple lines only work in a 2D environment.
-        self.pixel_radius = self.radius * pixel_to_unit_ratio
+        self.pixel_radius = self.radius * va.pixel_to_unit_ratio
         self.pixel_diameter = self.pixel_radius * 2
 
         self.canvas = canvas
@@ -39,47 +37,52 @@ def vel1AfterCollision(ball1, ball2):
 
     # See: https://en.wikipedia.org/wiki/Elastic_collision
     # and https://stackoverflow.com/questions/9171158/how-do-you-get-the-magnitude-of-a-vector-in-numpy
-    displacementBtwnCenters = ball1.position - ball2.position #shorter var name would be nice
+    dist_btwn_centers = ball1.position - ball2.position #shorter var name would be nice
 
-    return ball1.velocity - (2 * ball2.mass * np.dot(ball1.velocity - ball2.velocity, displacementBtwnCenters) * displacementBtwnCenters) / ((ball1.mass + ball2.mass) * (np.linalg.norm(displacementBtwnCenters) ** 2))
+    return ball1.velocity - (2 * ball2.mass * np.dot(ball1.velocity - ball2.velocity, dist_btwn_centers) * dist_btwn_centers) / ((ball1.mass + ball2.mass) * (np.linalg.norm(dist_btwn_centers) ** 2))
 
-def tooClose(position1, position2, radius1, radius2, dimension): # a and b should be vectors of dimension  # ? What order should the arguments be in?
+# TODO: 'a' and 'b' should be vectors of 'dimension'
+# ? What order should the arguments be in?
+def tooClose(position1, position2, radius1, radius2):
 
-        # the arguments aren't the balls themselves, so that generate Balls can use this, maybe change that later?
-        # i put this outside of the ball class because i want to it to be able to be used in generateBalls before actually generating ball objects
-        return np.linalg.norm(position1 - position2) <= radius1 + radius2  #how much margin do we need for things not to phase into each other?
+        # The arguments aren't the balls themselves, so that generate Balls can use this, maybe change that later?
+        # I put this outside of the ball class because i want to it to be able to be used in generateBalls before actually generating ball objects.
+        # How much margin do we need for things not to phase into each other?
+        return np.linalg.norm(position1 - position2) <= radius1 + radius2
 
-def place_ball(self, canvas, pixel_to_unit_ratio, position, velocity, radius, density):
+def place_ball(self, canvas, position, velocity, radius, density):
 
-    self.balls.append(Ball(canvas, pixel_to_unit_ratio, position, velocity, radius, density))
+    self.balls.append(Ball(canvas, position, velocity, radius, density))
 
-def generateBalls(canvas, pixel_to_unit_ratio, balls, dimension, bounds, number_of_balls, maximum_radius, maximum_velocity):
+def generateBalls(canvas, balls, bounds):
 
-    minimum_radius = maximum_radius * 0.2
+    minimum_radius = va.maximum_radius * 0.2
     balls_started = 0
 
-    while balls_started < number_of_balls:
+    while balls_started < va.number_of_balls:
 
         # generate values for a potential new ball
-        potential_position = np.zeros(dimension)
+        potential_position = np.zeros(va.dimension)
 
-        for i in range(dimension):
+        for i in range(va.dimension):
             potential_position[i] = ra.random()
 
-        potential_radius = minimum_radius + ra.random() * (maximum_radius - minimum_radius)
-        clear = True #I considered using continue, but i don't know how that would work with nested loops
+        potential_radius = minimum_radius + ra.random() * (va.maximum_radius - minimum_radius)
 
-        #check that the ball is in bounds
-        for dimensions in range(dimension):  #integrate this with the boundary checking during animation?
+        # TODO: see if using 'continue' is a better approach than using a boolean.
+        clear = True
 
-            if potential_position[dimensions] + potential_radius > bounds[dimensions][1] or potential_position[dimensions] - potential_radius < bounds[dimensions][0]: #would it be better to have a variable reference Ball[i]? idk
-                clear = False #what do you think about using continue ?
-            # * Would accessing the radius only once be better?
+        # Check if the ball is in bounds
+        # TODO: integrate this with the boundary checking during animation.
+        for dimensions in range(va.dimension):
+
+            if potential_position[dimensions] + potential_radius > bounds[dimensions][1] or potential_position[dimensions] - potential_radius < bounds[dimensions][0]:
+                clear = False
 
         #check that the ball isn't touching an already placed ball
         for other_ball_index in range(0, balls_started):
 
-            if tooClose(potential_position, balls[other_ball_index].position, potential_radius, balls[other_ball_index].radius, 2):
+            if tooClose(potential_position, balls[other_ball_index].position, potential_radius, balls[other_ball_index].radius):
                 clear = False
                 break
 
@@ -87,12 +90,12 @@ def generateBalls(canvas, pixel_to_unit_ratio, balls, dimension, bounds, number_
         if clear:
 
             #generate a random n-dimensional velocity
-            new_velocity = np.zeros(dimension) # creates a dimension long array full of zeros
+            new_velocity = np.zeros(va.dimension) # creates a dimension long array full of zeros
 
-            for v in range(dimension):
-                new_velocity[v] = 2 * (ra.random() - 0.5) * maximum_velocity
-                #new_velocity[v] = maximum_velocity
+            for v in range(va.dimension):
+                new_velocity[v] = 2 * (ra.random() - 0.5) * va.maximum_velocity
+                #new_velocity[v] = va.maximum_velocity
 
             #density 0.2 + ra.random() * 0.8
-            balls.append(Ball(canvas, pixel_to_unit_ratio, potential_position, new_velocity, potential_radius, 1))
+            balls.append(Ball(canvas, potential_position, new_velocity, potential_radius, 1))
             balls_started += 1  # Needs to be at the end for the above math.
