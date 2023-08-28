@@ -73,7 +73,7 @@ class Simulation:
         y_coordinate = event.y
 
         # Adapt to numpy
-        pa.place_ball(self, self.canvas, np.array([x_coordinate / va.pixel_to_unit_ratio, y_coordinate / va.pixel_to_unit_ratio]), np.array([0.1, 0.1]), 0.1, 1, None)
+        pa.place_ball(self, self.canvas, np.array([x_coordinate / va.pixel_to_unit_ratio, y_coordinate / va.pixel_to_unit_ratio]), np.array([va.max_gen_units_per_tick, va.max_gen_units_per_tick]), 0.1, 1, None)
         va.number_of_balls += 1
 
     # Main operation
@@ -81,22 +81,10 @@ class Simulation:
 
         # Each ball moves due to its vel.
         for i in range(va.number_of_balls):
+            no_wall_bounce = True
+             
 
-            # If a ball is out of bounds, reverse vel
-            # Only works if the container is rectangular.
-            for dim in range(va.dimension):
-
-                # ? Would it be better to have a variable reference Ball[i]?
-                # Collision with the walls
-                if self.balls[i].pos[dim] + self.balls[i].radius > self.bounds[dim][1]:
-                    #TODO: actually calculate where the ball should end up instead of fudging
-                    self.balls[i].pos[dim] = self.bounds[dim][1] - self.balls[i].radius
-                    self.balls[i].vel[dim] *= -1
-
-                if self.balls[i].pos[dim] - self.balls[i].radius < self.bounds[dim][0]:
-                    #TODO: actually calculate where the ball should end up instead of fudging
-                    self.balls[i].pos[dim] += self.bounds[dim][0] + self.balls[i].radius
-                    self.balls[i].vel[dim] *= -1
+                
 
             # Test and effect collisions
             # TODO: calculate collision wihtout checking every ball at once.
@@ -124,12 +112,40 @@ class Simulation:
                         #print(self.balls[inner].vel, self.balls[outer].vel)
                         #print(outer, inner)
 
+                #If a ball is out of bounds, reverse vel
+                # Only works if the container is rectangular.
+                for dim in range(va.dimension):
+                    # ? Would it be better to have a variable reference Ball[i]?
+                    # Collision with the walls
+                    if self.balls[i].pos[dim] + self.balls[i].radius > self.bounds[dim][1]:
+                        no_wall_bounce = False
+                        # can the first two blocks be integrated with out losing efficiency?
+                        time_before = (self.bounds[dim][1] - self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
+                        # time_after + time_before = 1 tick
+                        time_after = 1 - time_before
+                        old_vel = self.balls[i].vel
+                        #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
+                        self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
+                        self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
+                        self.balls[i].pos[dim] -= va.bouncing_fudge_factor
+                    elif self.balls[i].pos[dim] - self.balls[i].radius < self.bounds[dim][0]:
+                        no_wall_bounce = False
+                        time_before = (self.bounds[dim][0] + self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
+                        # time_after + time_before = 1 tick
+                        time_after = 1 - time_before
+                        old_vel = self.balls[i].vel
+                        #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
+                        self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
+                        self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
+                        self.balls[i].pos[dim] += va.bouncing_fudge_factor
 
-            # TODO: Optimize code
-            # Changes the positon based on vel per unit time.
-            self.balls[i].pos[0] += self.balls[i].vel[0] # Change the ball pos by the vel
-            self.balls[i].pos[1] += self.balls[i].vel[1] # pos[0] = x, pos[1] = y  (units / sec) * (sec / tick) = units / tick
+                if no_wall_bounce:
+                    # TODO: Optimize code
+                    # Changes the positon based on vel per unit time.
+                    self.balls[i].pos[0] += self.balls[i].vel[0] # Change the ball pos by the vel
+                    self.balls[i].pos[1] += self.balls[i].vel[1] # pos[0] = x, pos[1] = y
 
+            
         # Display the new ball poss
         for i in range(va.number_of_balls):
             #print(self.balls[i].vel * va.pixel_to_unit_ratio)
