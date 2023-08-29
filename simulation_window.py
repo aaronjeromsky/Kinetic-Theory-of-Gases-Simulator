@@ -96,9 +96,19 @@ class Simulation:
                     disp_o_i = self.balls[outer].pos - self.balls[inner].pos
                     disp_i_o = -1 * disp_o_i
                     mag_o_i = np.linalg.norm(disp_o_i)
+                    rad_sum = self.balls[inner].radius + self.balls[outer].radius
+                    
 
                     #print(outer, inner)
-                    if mag_o_i <= self.balls[inner].radius + self.balls[outer].radius:
+                    if mag_o_i <= rad_sum:
+                        vel_disp_o_i = self.balls[outer].vel - self.balls[inner].vel # TODO: check if these are incorrectly switched
+                        vel_disp_i_o = -1 * vel_disp_o_i
+                        #vel_disp_mag = np.linalg.norm(vel_disp_o_i)
+
+                        #stop the ball from overlapping, i'm not really happy with this method but i guess it's fine kinda
+                        fudge = (disp_o_i / mag_o_i) * (rad_sum - mag_o_i) / 2
+                        self.balls[outer].pos += fudge
+                        self.balls[inner].pos -= fudge
 
                         # Remember to swap around!
                         #print(outer, inner)
@@ -106,14 +116,17 @@ class Simulation:
                         # See: https://en.wikipedia.org/wiki/Elastic_collision
                         # and https://stackoverflow.com/questions/9171158/how-do-you-get-the-magnitude-of-a-vector-in-numpy
 
-                        temporary_vel = self.balls[inner].vel - (2 * self.balls[outer].mass * np.dot(self.balls[inner].vel - self.balls[outer].vel, disp_o_i) * disp_o_i) / ((self.balls[inner].mass + self.balls[outer].mass) * (mag_o_i ** 2))
-                        self.balls[outer].vel = self.balls[outer].vel - (2 * self.balls[inner].mass * np.dot(self.balls[outer].vel - self.balls[inner].vel, disp_i_o) * disp_i_o) / ((self.balls[outer].mass + self.balls[inner].mass) * (mag_o_i ** 2))
+                        temporary_vel = self.balls[inner].vel - (2 * self.balls[outer].mass * np.dot(vel_disp_i_o, disp_o_i) * disp_o_i) / ((self.balls[inner].mass + self.balls[outer].mass) * (mag_o_i ** 2))
+                        self.balls[outer].vel = self.balls[outer].vel - (2 * self.balls[inner].mass * np.dot(vel_disp_o_i, disp_i_o) * disp_i_o) / ((self.balls[outer].mass + self.balls[inner].mass) * (mag_o_i ** 2))
                         self.balls[inner].vel = temporary_vel
                         #print(self.balls[inner].vel, self.balls[outer].vel)
                         #print(outer, inner)
 
+                        #self.balls[i].pos += disp_i_o * va.collision_tick_fudge_factor
+
                 #balls change pos due to vel
                 self.balls[i].pos += self.balls[i].vel
+                #this does not jibe well with the following code
                 
                 #If a ball is out of bounds, reverse vel
                 # Only works if the container is rectangular.
