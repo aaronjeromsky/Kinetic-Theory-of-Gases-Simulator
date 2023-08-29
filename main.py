@@ -8,8 +8,9 @@ import variables as va
 statistics_window = tk.Tk()
 simulation_window = tk.Tk()
 
-statistics_object = st.Statistics(statistics_window)
 simulation_object = si.Simulation(simulation_window)
+statistics_object = st.Statistics(statistics_window, simulation_object)
+#I'm passing the simulation_object to stats so that it can so stats on it. I'm not sure this is the best way to do it
 
 def update_statistics():
 
