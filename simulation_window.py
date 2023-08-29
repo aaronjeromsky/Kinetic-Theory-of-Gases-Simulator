@@ -112,38 +112,46 @@ class Simulation:
                         #print(self.balls[inner].vel, self.balls[outer].vel)
                         #print(outer, inner)
 
+                #balls change pos due to vel
+                self.balls[i].pos += self.balls[i].vel
+                
                 #If a ball is out of bounds, reverse vel
                 # Only works if the container is rectangular.
                 for dim in range(va.dimension):
                     # ? Would it be better to have a variable reference Ball[i]?
                     # Collision with the walls
                     if self.balls[i].pos[dim] + self.balls[i].radius > self.bounds[dim][1]:
-                        no_wall_bounce = False
+                        
                         # can the first two blocks be integrated with out losing efficiency?
                         time_before = (self.bounds[dim][1] - self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
                         # time_after + time_before = 1 tick
                         time_after = 1 - time_before
                         old_vel = self.balls[i].vel
+
+                        #reset the ball to where is was before clipping
+                        self.balls[i].pos -= self.balls[i].vel
+
                         #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
                         self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
                         self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
                         self.balls[i].pos[dim] -= va.bouncing_fudge_factor
                     elif self.balls[i].pos[dim] - self.balls[i].radius < self.bounds[dim][0]:
-                        no_wall_bounce = False
+                        
                         time_before = (self.bounds[dim][0] + self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
                         # time_after + time_before = 1 tick
                         time_after = 1 - time_before
                         old_vel = self.balls[i].vel
+
+                        #reset the ball to where is was before clipping
+                        self.balls[i].pos -= self.balls[i].vel
+
                         #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
                         self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
                         self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
                         self.balls[i].pos[dim] += va.bouncing_fudge_factor
 
-                if no_wall_bounce:
-                    # TODO: Optimize code
-                    # Changes the positon based on vel per unit time.
-                    self.balls[i].pos[0] += self.balls[i].vel[0] # Change the ball pos by the vel
-                    self.balls[i].pos[1] += self.balls[i].vel[1] # pos[0] = x, pos[1] = y
+                
+                    
 
             
         # Display the new ball poss
