@@ -1,6 +1,7 @@
 import tkinter as tk
 import variables as va
 import numpy as np
+import os as os
 
 class Statistics:
 
@@ -24,20 +25,22 @@ class Statistics:
 
         window.title('Statistics')
         window.config(background='#FFFFFF')
-        icon = tk.PhotoImage(file='icon.png')
-        window.iconphoto(True, icon)
-
-        label_font = ('Consolas', 16)
+        window.resizable(False, False)
+        script_path = os.path.abspath(__file__)
+        script_dir = os.path.dirname(script_path)
+        icon_path = os.path.join(script_dir, 'icon.png')
+        icon_image = tk.PhotoImage(file=icon_path)
+        window.iconphoto(True, icon_image)
 
         # Labels
-        self.stat1label = tk.Label(self.window, text="Seconds per tick: "    + str(va.seconds_per_tick),                                                                     font=label_font, borderwidth=1, relief=tk.SOLID)
-        self.stat2label = tk.Label(self.window, text="Dimension: "           + str(va.dimension),                                                                            font=label_font, borderwidth=1, relief=tk.SOLID)
-        self.stat3label = tk.Label(self.window, text="Pixel to unit ratio: " + str(va.pixel_to_unit_ratio),                                                                  font=label_font, borderwidth=1, relief=tk.SOLID)
-        self.stat4label = tk.Label(self.window, text="Number of balls: "     + str(va.number_of_balls),                                                                      font=label_font, borderwidth=1, relief=tk.SOLID)
-        self.stat5label = tk.Label(self.window, text="Maximum radius: "      + str(va.maximum_radius),                                                                       font=label_font, borderwidth=1, relief=tk.SOLID)
-        self.stat6label = tk.Label(self.window, text="Maximum initial vel: " + str(va.max_gen_units_per_sec),                                                                font=label_font, borderwidth=1, relief=tk.SOLID)
-        self.stat7label = tk.Label(self.window, text="Average vel: "         + "{:.4f}".format(va.avg_vel[0] * 10000) + ", " + "{:.4f}".format(va.avg_vel[1] * 10000) + "]", font=label_font, borderwidth=1, relief=tk.SOLID)
-        self.stat8label = tk.Label(self.window, text="Average speed: "       + "{:.4f}".format(va.avg_vel_mag * 10000),                                                      font=label_font, borderwidth=1, relief=tk.SOLID)
+        self.stat1label = tk.Label(self.window, text="Seconds per tick: "    + str(va.seconds_per_tick),                                                                     font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat2label = tk.Label(self.window, text="Dimension: "           + str(va.dimension),                                                                            font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat3label = tk.Label(self.window, text="Pixel to unit ratio: " + str(va.pixel_to_unit_ratio),                                                                  font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat4label = tk.Label(self.window, text="Number of balls: "     + str(va.number_of_balls),                                                                      font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat5label = tk.Label(self.window, text="Maximum radius: "      + str(va.maximum_radius),                                                                       font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat6label = tk.Label(self.window, text="Maximum initial vel: " + str(va.max_gen_units_per_sec),                                                                font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat7label = tk.Label(self.window, text="Average vel: "         + "{:.4f}".format(va.avg_vel[0] * 1000) + ", " + "{:.4f}".format(va.avg_vel[1] * 1000) + "]", font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat8label = tk.Label(self.window, text="Average speed: "       + "{:.4f}".format(va.avg_vel_mag * 1000),                                                      font=va.text_font, borderwidth=1, relief=tk.SOLID)
 
         # Positions
         self.stat1label.place(x=0, y=0)
@@ -63,5 +66,5 @@ class Statistics:
         self.stat4label['text'] = "Number of balls: "     + str(va.number_of_balls)
         self.stat5label['text'] = "Maximum radius: "      + str(va.maximum_radius)
         self.stat6label['text'] = "Maximum initial vel: " + str(va.max_gen_units_per_sec)
-        self.stat7label['text'] = "Average vel: ["        + "{:.4f}".format(va.avg_vel[0] * 10000) + ", " + "{:.4f}".format(va.avg_vel[1] * 10000) + "]"
-        self.stat8label['text'] = "Average speed: "       + "{:.4f}".format(va.avg_vel_mag * 10000)
+        self.stat7label['text'] = "Average vel: ["        + "{:.4f}".format(va.avg_vel[0] * 1000) + ", " + "{:.4f}".format(va.avg_vel[1] * 1000) + "]"
+        self.stat8label['text'] = "Average speed: "       + "{:.4f}".format(va.avg_vel_mag * 1000)

@@ -15,6 +15,7 @@ class Ball:
         self.density = density
         self.mass = density * ma.pi * (radius ** 2)
 
+        # TODO: Make color reflect ball property values
         # Generate a random color if none is provided
         if (color is None):
             color_value = lambda : ra.randint(0,255)
@@ -52,6 +53,7 @@ def generate_random_balls(canvas, balls):
         density = ra.uniform(0, 1)
         color = None
 
+        # TODO: check condition before creating the ball object.
         new_ball = Ball(canvas, pos, vel, radius, density, color)
 
         for old_ball in balls:

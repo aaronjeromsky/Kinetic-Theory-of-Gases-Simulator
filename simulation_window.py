@@ -55,7 +55,6 @@ class Simulation:
 
         # Create and place balls onto the canvas.
         pa.generate_random_balls(self.canvas, self.balls)
-
         va.avg_vel = self.return_avg_vel()
         va.avg_vel_mag = np.linalg.norm(va.avg_vel)
 
@@ -82,6 +81,7 @@ class Simulation:
 
         # Each ball moves due to its vel.
         for i in range(va.number_of_balls):
+
             no_wall_bounce = True
 
             # Test and effect collisions
@@ -94,9 +94,19 @@ class Simulation:
                     disp_o_i = self.balls[outer].pos - self.balls[inner].pos
                     disp_i_o = -1 * disp_o_i
                     mag_o_i = np.linalg.norm(disp_o_i)
+                    rad_sum = self.balls[inner].radius + self.balls[outer].radius
 
                     #print(outer, inner)
-                    if mag_o_i <= self.balls[inner].radius + self.balls[outer].radius:
+                    if mag_o_i <= rad_sum:
+
+                        vel_disp_o_i = self.balls[outer].vel - self.balls[inner].vel # TODO: check if these are incorrectly switched
+                        vel_disp_i_o = -1 * vel_disp_o_i
+                        #vel_disp_mag = np.linalg.norm(vel_disp_o_i)
+
+                        #stop the ball from overlapping, i'm not really happy with this method but i guess it's fine kinda
+                        fudge = (disp_o_i / mag_o_i) * (rad_sum - mag_o_i) / 2
+                        self.balls[outer].pos += fudge
+                        self.balls[inner].pos -= fudge
 
                         # Remember to swap around!
                         #print(outer, inner)
@@ -104,11 +114,17 @@ class Simulation:
                         # See: https://en.wikipedia.org/wiki/Elastic_collision
                         # and https://stackoverflow.com/questions/9171158/how-do-you-get-the-magnitude-of-a-vector-in-numpy
 
-                        temporary_vel = self.balls[inner].vel - (2 * self.balls[outer].mass * np.dot(self.balls[inner].vel - self.balls[outer].vel, disp_o_i) * disp_o_i) / ((self.balls[inner].mass + self.balls[outer].mass) * (mag_o_i ** 2))
-                        self.balls[outer].vel = self.balls[outer].vel - (2 * self.balls[inner].mass * np.dot(self.balls[outer].vel - self.balls[inner].vel, disp_i_o) * disp_i_o) / ((self.balls[outer].mass + self.balls[inner].mass) * (mag_o_i ** 2))
+                        temporary_vel = self.balls[inner].vel - (2 * self.balls[outer].mass * np.dot(vel_disp_i_o, disp_o_i) * disp_o_i) / ((self.balls[inner].mass + self.balls[outer].mass) * (mag_o_i ** 2))
+                        self.balls[outer].vel = self.balls[outer].vel - (2 * self.balls[inner].mass * np.dot(vel_disp_o_i, disp_i_o) * disp_i_o) / ((self.balls[outer].mass + self.balls[inner].mass) * (mag_o_i ** 2))
                         self.balls[inner].vel = temporary_vel
                         #print(self.balls[inner].vel, self.balls[outer].vel)
                         #print(outer, inner)
+
+                        #self.balls[i].pos += disp_i_o * va.collision_tick_fudge_factor
+
+                #balls change pos due to vel
+                self.balls[i].pos += self.balls[i].vel
+                #this does not jibe well with the following code
 
                 #If a ball is out of bounds, reverse vel
                 # Only works if the container is rectangular.
@@ -118,12 +134,15 @@ class Simulation:
                     # Collision with the walls
                     if self.balls[i].pos[dim] + self.balls[i].radius > self.bounds[dim][1]:
 
-                        no_wall_bounce = False
                         # can the first two blocks be integrated with out losing efficiency?
                         time_before = (self.bounds[dim][1] - self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
                         # time_after + time_before = 1 tick
                         time_after = 1 - time_before
                         old_vel = self.balls[i].vel
+
+                        #reset the ball to where is was before clipping
+                        self.balls[i].pos -= self.balls[i].vel
+
                         #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
                         self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
                         self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
@@ -131,23 +150,18 @@ class Simulation:
 
                     elif self.balls[i].pos[dim] - self.balls[i].radius < self.bounds[dim][0]:
 
-                        no_wall_bounce = False
                         time_before = (self.bounds[dim][0] + self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
                         # time_after + time_before = 1 tick
                         time_after = 1 - time_before
                         old_vel = self.balls[i].vel
+
+                        #reset the ball to where is was before clipping
+                        self.balls[i].pos -= self.balls[i].vel
+
                         #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
                         self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
                         self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
                         self.balls[i].pos[dim] += va.bouncing_fudge_factor
-
-                if no_wall_bounce:
-
-                    # TODO: Optimize code
-                    # Changes the positon based on vel per unit time.
-                    self.balls[i].pos[0] += self.balls[i].vel[0] # Change the ball pos by the vel
-                    self.balls[i].pos[1] += self.balls[i].vel[1] # pos[0] = x, pos[1] = y
-
 
         # Display the new ball poss
         for i in range(va.number_of_balls):
