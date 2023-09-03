@@ -2,32 +2,13 @@ import tkinter as tk
 import particles as pa
 import numpy as np
 import variables as va
+import itertools as it
 
 class Simulation:
 
     def __init__(self, window):
 
         # Internal Variables
-
-        # It can be a rectangle, rectangular prism, etc.
-        self.bounds = []
-        self.sizes = []
-
-        for i in range(va.dimension):
-
-            # This makes a 1 by 1 box, should be something the user can change?
-            # For now it's [[0, 1], [0, 1]]
-            self.bounds.append([0, 1])
-            self.sizes.append(abs(self.bounds[i][1] - self.bounds[i][0]))
-
-        self.width = self.sizes[0]
-        self.height = self.sizes[1]
-
-        self.pixel_width = self.width * va.pixel_to_unit_ratio
-        self.pixel_height = self.height * va.pixel_to_unit_ratio
-
-        self.left_side = 0
-        self.right_side = self.pixel_width
         self.balls = []
 
         # Window
@@ -45,13 +26,14 @@ class Simulation:
 
         window.title('Simulator')
         window.resizable(False, False)
-        self.canvas = tk.Canvas(window, width = self.pixel_width, height = self.pixel_height)
-        # 2, 2 to make canvas border visible.
-        self.canvas.create_rectangle(2, 2, self.pixel_width, self.pixel_height)
+        # TODO: use variables instead of magic numbers for width and height
+        self.canvas = tk.Canvas(window, width=500, height=500)
+        self.canvas.configure(bg='#FFFFFF')
+        #self.canvas.create_rectangle(0, 0, 500, 500)
         self.canvas.pack()
 
-        # Listen to mouse-click events on canvas.
-        self.canvas.bind('<Button-1>', self.left_mouse_click)
+        # Listen to LMB click on canvas.
+        self.canvas.bind('<Button-1>', self.lmb_click)
 
         # Create and place balls onto the canvas.
         pa.generate_random_balls(self.canvas, self.balls)
@@ -59,116 +41,103 @@ class Simulation:
         va.avg_vel_mag = np.linalg.norm(va.avg_vel)
 
     def return_avg_vel(self):
-        #why does it need self as an arg?
-        total_vel = 0
-        for ball in self.balls:
-            total_vel += ball.vel
 
-        return total_vel / va.number_of_balls
+        sum_vel = 0
+
+        for ball in self.balls:
+            sum_vel += ball.vel
+
+        return sum_vel / va.num_balls
 
     # Create a new ball where a LMB click was registered.
-    def left_mouse_click(self, event):
+    def lmb_click(self, event):
 
-        x_coordinate = event.x
-        y_coordinate = event.y
+        x_coord = event.x
+        y_coord = event.y
 
-        pa.place_ball(self, self.canvas, np.array([x_coordinate / va.pixel_to_unit_ratio, y_coordinate / va.pixel_to_unit_ratio]),
-                      np.array([0, 0]), 0.1, 1, None)
-        va.number_of_balls += 1
+        pa.place_ball(self, self.canvas, np.array([x_coord, y_coord]), np.array([0, 0]), 0.1, 1, None)
+
+    def update_stats(self):
+
+        sum_vel = 0
+        sum_rad = 0
+        sum_den = 0
+
+        for ball in self.balls:
+            sum_vel += ball.vel
+            sum_rad += ball.rad
+            sum_den += ball.density
+
+        va.avg_vel = sum_vel / va.num_balls
+        va.avg_spd = np.linalg.norm(va.avg_vel)
+        va.avg_den = sum_den / va.num_balls
+        va.avg_rad = sum_rad / va.num_balls
 
     # Main operation
     def update(self):
 
-        # Each ball moves due to its vel.
-        for i in range(va.number_of_balls):
+        # ! boundary collisions causes rapid back and forth pulsating
+        self.handle_boundary_collisions()
+        self.check_for_overlap()
+        self.draw_balls()
+        # TODO: only update changed values, rad and den won't change often, use a seperate func
+        self.update_stats()
 
-            no_wall_bounce = True
+    def draw_balls(self):
 
-            # Test and effect collisions
-            # TODO: calculate collision wihtout checking every ball at once.
-            for outer in range(va.number_of_balls):
+        for ball in self.balls:
 
-                for inner in range(outer + 1, va.number_of_balls):  # + 1 so that it won't compare a ball against itself
+            self.canvas.move(ball.image, ball.vel[0], ball.vel[1])
 
-                    #find displacement and magnitude btwn outer and inner balls
-                    disp_o_i = self.balls[outer].pos - self.balls[inner].pos
-                    disp_i_o = -1 * disp_o_i
-                    mag_o_i = np.linalg.norm(disp_o_i)
-                    rad_sum = self.balls[inner].radius + self.balls[outer].radius
+    # TODO: Performance log to test effectiveness
+    # ? Access directly from object or assign data to variable
+    def update_ball_velocities(self, ball_1, ball_2):
 
-                    #print(outer, inner)
-                    if mag_o_i <= rad_sum:
+        pos_1 = ball_1.pos
+        pos_2 = ball_2.pos
 
-                        vel_disp_o_i = self.balls[outer].vel - self.balls[inner].vel # TODO: check if these are incorrectly switched
-                        vel_disp_i_o = -1 * vel_disp_o_i
-                        #vel_disp_mag = np.linalg.norm(vel_disp_o_i)
+        disp = np.linalg.norm(pos_1 - pos_2) ** 2
 
-                        #stop the ball from overlapping, i'm not really happy with this method but i guess it's fine kinda
-                        fudge = (disp_o_i / mag_o_i) * (rad_sum - mag_o_i) / 2
-                        self.balls[outer].pos += fudge
-                        self.balls[inner].pos -= fudge
+        vel_1 = ball_1.vel
+        vel_2 = ball_2.vel
 
-                        # Remember to swap around!
-                        #print(outer, inner)
+        mass_1 = ball_1.mass
+        mass_2 = ball_2.mass
+        mass_sum = mass_1 + mass_2
 
-                        # See: https://en.wikipedia.org/wiki/Elastic_collision
-                        # and https://stackoverflow.com/questions/9171158/how-do-you-get-the-magnitude-of-a-vector-in-numpy
+        new_vel_1 = vel_1 - 2 * mass_2 / mass_sum * np.dot(vel_1-vel_2, pos_1 - pos_2) / disp * (pos_1 - pos_2)
+        new_vel_2 = vel_2 - 2 * mass_1 / mass_sum * np.dot(vel_2-vel_1, pos_2 - pos_1) / disp * (pos_2 - pos_1)
 
-                        temporary_vel = self.balls[inner].vel - (2 * self.balls[outer].mass * np.dot(vel_disp_i_o, disp_o_i) * disp_o_i) / ((self.balls[inner].mass + self.balls[outer].mass) * (mag_o_i ** 2))
-                        self.balls[outer].vel = self.balls[outer].vel - (2 * self.balls[inner].mass * np.dot(vel_disp_o_i, disp_i_o) * disp_i_o) / ((self.balls[outer].mass + self.balls[inner].mass) * (mag_o_i ** 2))
-                        self.balls[inner].vel = temporary_vel
-                        #print(self.balls[inner].vel, self.balls[outer].vel)
-                        #print(outer, inner)
+        ball_1.vel = new_vel_1
+        ball_2.vel = new_vel_2
 
-                        #self.balls[i].pos += disp_i_o * va.collision_tick_fudge_factor
+    def check_for_overlap(self):
 
-                #balls change pos due to vel
-                self.balls[i].pos += self.balls[i].vel
-                #this does not jibe well with the following code
+        pairs = it.combinations(range(va.num_balls), 2)
 
-                #If a ball is out of bounds, reverse vel
-                # Only works if the container is rectangular.
-                for dim in range(va.dimension):
+        for i, j in pairs:
 
-                    # ? Would it be better to have a variable reference Ball[i]?
-                    # Collision with the walls
-                    if self.balls[i].pos[dim] + self.balls[i].radius > self.bounds[dim][1]:
+            # ? Is the 'i' and 'j' order correct? What about the one in 'particles.py'
+            if pa.overlaps(self.balls[i].pos, self.balls[i].rad, self.balls[j].pos, self.balls[j].rad):
 
-                        # can the first two blocks be integrated with out losing efficiency?
-                        time_before = (self.bounds[dim][1] - self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
-                        # time_after + time_before = 1 tick
-                        time_after = 1 - time_before
-                        old_vel = self.balls[i].vel
+                self.update_ball_velocities(self.balls[i], self.balls[j])
 
-                        #reset the ball to where is was before clipping
-                        self.balls[i].pos -= self.balls[i].vel
+    def handle_boundary_collisions(self):
 
-                        #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
-                        self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
-                        self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
-                        self.balls[i].pos[dim] -= va.bouncing_fudge_factor
+        for ball in self.balls:
 
-                    elif self.balls[i].pos[dim] - self.balls[i].radius < self.bounds[dim][0]:
+            if ball.pos[0] - ball.rad < 0:
+                ball.pos[0] = ball.rad
+                ball.vel[0] = -ball.vel[0]
 
-                        time_before = (self.bounds[dim][0] + self.balls[i].radius - self.balls[i].pos[dim]) / self.balls[i].vel[dim]
-                        # time_after + time_before = 1 tick
-                        time_after = 1 - time_before
-                        old_vel = self.balls[i].vel
+            if ball.pos[0] + ball.rad > 1:
+                ball.pos[0] = 1-ball.rad
+                ball.vel[0] = -ball.vel[0]
 
-                        #reset the ball to where is was before clipping
-                        self.balls[i].pos -= self.balls[i].vel
+            if ball.pos[1] - ball.rad < 0:
+                ball.pos[1] = ball.rad
+                ball.vel[1] = -ball.vel[1]
 
-                        #set the ball object to store what the new vel will be, while keeping the old vel in a temp var
-                        self.balls[i].vel[dim] = -1 * self.balls[i].vel[dim]
-                        self.balls[i].pos = self.balls[i].pos + old_vel * time_before + self.balls[i].vel * time_after
-                        self.balls[i].pos[dim] += va.bouncing_fudge_factor
-
-        # Display the new ball poss
-        for i in range(va.number_of_balls):
-
-            #print(self.balls[i].vel * va.pixel_to_unit_ratio)
-            x_pos = self.balls[i].pos[0] * va.pixel_to_unit_ratio
-            y_pos = self.balls[i].pos[1] * va.pixel_to_unit_ratio
-
-            # 'moveto' starts at top-left corner as (0, 0)
-            self.canvas.moveto(self.balls[i].image, x_pos - self.balls[i].pixel_radius, y_pos - self.balls[i].pixel_radius)
+            if ball.pos[1] + ball.rad > 1:
+                ball.pos[1] = 1-ball.rad
+                ball.vel[1] = -ball.vel[1]

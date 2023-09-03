@@ -9,11 +9,14 @@ simulation_window = tk.Tk()
 control_window = tk.Tk()
 
 simulation_object = si.Simulation(simulation_window)
-statistics_object = st.Statistics(statistics_window, simulation_object)
+statistics_object = st.Statistics(statistics_window)
 control_object = co.Controls(control_window)
 
-# Ball movement is noticebly "glitchy", this is easier to spot with the lowered tick rate.
+# TODO: ball movement rapidly moves back and forth, figure out the cause
 # TODO: stop all loops when paused (currently using messy workaround)
+# TODO: shorten func and var names
+# TODO: fix ball placement and generation and wall collision
+
 def update_statistics():
 
     if (not va.paused):

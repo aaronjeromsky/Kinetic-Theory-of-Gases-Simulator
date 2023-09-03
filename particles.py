@@ -5,60 +5,62 @@ import variables as va
 
 class Ball:
 
-    def __init__(self, canvas, pos=np.array([0, 0]), vel=np.array([0, 0]), radius=0.1, density=1, color=None):
+    # TODO: update default values
+    def __init__(self, canvas, pos=np.array([250, 250]), vel=np.array([0, 0]), rad=0.1, density=1, color=None):
 
         # Parameters
         self.pos = pos
         self.vel = vel
-        self.radius = radius
-        self.diameter = radius * 2
+        self.rad = rad
         self.density = density
-        self.mass = density * ma.pi * (radius ** 2)
 
-        # TODO: Make color reflect ball property values
-        # Generate a random color if none is provided
+        # Generates a monochrome color (represneting density) when no color is provided
         if (color is None):
-            color_value = lambda : ra.randint(0,255)
+            color_value = lambda : int(density * 255)
             self.color = '#{:02x}{:02x}{:02x}'.format(color_value(), color_value(), color_value())
         else:
             self.color = color
 
-        # The following couple lines only work in a 2D environment.
-        self.pixel_radius = self.radius * va.pixel_to_unit_ratio
-        self.pixel_diameter = self.pixel_radius * 2
+        self.diameter = rad * 2
+        self.mass = density * ma.pi * (rad ** 2)
 
         self.canvas = canvas
-        self.image = self.canvas.create_oval(0, 0, self.pixel_diameter, self.pixel_diameter, fill = self.color, width = 0)
 
-    # Returns true is balls aren't overlapping, false otherwise.
-    def overlaps(self, other):
+        # ! The oval image may not match the internal calculations
+        self.image = self.canvas.create_oval(pos[0], pos[1], pos[0] + self.diameter, pos[1] + self.diameter, fill = self.color, width = 0)
 
-        return np.hypot(*(self.pos - other.pos)) < self.radius + other.radius
+        va.num_balls += 1
 
+# Returns true if balls aren't overlapping, false otherwise.
+def overlaps(pos_1, rad_1, pos_2, rad_2):
+
+    return np.hypot(*(pos_1 - pos_2)) < rad_1 + rad_2
+
+# ? Should this use 'self.balls' or just the parameter 'balls'
 def place_ball(self, canvas, pos, vel, radius, density, color):
 
     self.balls.append(Ball(canvas, pos, vel, radius, density, color))
 
 def generate_random_balls(canvas, balls):
 
-    num_balls_created = 0
+    while va.num_balls < va.balls_to_create:
 
-    while num_balls_created < va.number_of_balls:
+        # Initial random values for the ball
+        pos = np.array([ra.uniform(0, 500), ra.uniform(0, 500)])
+        rad = ra.uniform(0, 50)
 
-        # Random values for a ball
-        # TODO: find and use optimal min and max values.
-        pos = np.array([ra.uniform(0, 1), ra.uniform(0, 1)])
-        vel = np.array([ra.uniform(0, 0.0001), ra.uniform(0, 0.0001)])
-        radius = ra.uniform(0, 0.1)
-        density = ra.uniform(0, 1)
-        color = None
-
-        # TODO: check condition before creating the ball object.
-        new_ball = Ball(canvas, pos, vel, radius, density, color)
-
-        for old_ball in balls:
-            if (old_ball.overlaps(new_ball)):
+        # Check if the ball overlaps an existing one
+        for ball in balls:
+            if (overlaps(ball.pos, ball.rad, pos, rad)):
                 break
+        else:
+            # remaning random values for the ball
+            vel = np.array([ra.uniform(0, 1), ra.uniform(0, 1)])
+            density = ra.uniform(0, 1)
+            color = None
 
-        balls.append(new_ball)
-        num_balls_created += 1
+            # Create the ball
+            new_ball = Ball(canvas, pos, vel, rad, density, color)
+
+            # Append the ball to the ball list
+            balls.append(new_ball)
