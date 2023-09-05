@@ -16,6 +16,8 @@ control_object = co.Controls(control_window)
 # TODO: stop all loops when paused (currently using messy workaround)
 # TODO: shorten func and var names
 # TODO: fix ball placement and generation and wall collision
+# TODO: internal size is drawn from the visual center to the top-left
+# TODO: remember when a ball is stuck inside another (can this be done with effecient math?)
 
 def update_statistics():
 

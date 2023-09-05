@@ -31,7 +31,7 @@ class Statistics:
 
         # Labels
         self.stat1label = tk.Label(self.window, text="Seconds per tick: "  + str(va.seconds_per_tick),                                                     font=va.text_font, borderwidth=1, relief=tk.SOLID)
-        self.stat2label = tk.Label(self.window, text="Dimensions: "         + str(va.dimension),                                                           font=va.text_font, borderwidth=1, relief=tk.SOLID)
+        self.stat2label = tk.Label(self.window, text="Dimensions: "        + str(va.dimension),                                                            font=va.text_font, borderwidth=1, relief=tk.SOLID)
         self.stat3label = tk.Label(self.window, text="Number of balls: "   + str(va.num_balls),                                                            font=va.text_font, borderwidth=1, relief=tk.SOLID)
         self.stat4label = tk.Label(self.window, text="Average radius: "    + "{:.4f}".format(va.avg_rad),                                                  font=va.text_font, borderwidth=1, relief=tk.SOLID)
         self.stat5label = tk.Label(self.window, text="Average density: "   + "{:.4f}".format(va.avg_den),                                                  font=va.text_font, borderwidth=1, relief=tk.SOLID)

@@ -19,7 +19,7 @@ class Simulation:
         ww = 600
         wh = 600
 
-        x = (sw / 2) - (ww / 2) + 250
+        x = (sw / 2) - (ww / 2)
         y = (sh / 2) - (wh / 2)
 
         window.geometry('%dx%d+%d+%d' % (ww, wh, x, y))
@@ -27,35 +27,45 @@ class Simulation:
         window.title('Simulator')
         window.resizable(False, False)
         # TODO: use variables instead of magic numbers for width and height
-        self.canvas = tk.Canvas(window, width=500, height=500)
+        self.canvas = tk.Canvas(window, width=500, height=500, highlightthickness=0, borderwidth=0)
         self.canvas.configure(bg='#FFFFFF')
-        #self.canvas.create_rectangle(0, 0, 500, 500)
         self.canvas.pack()
-
-        # Listen to LMB click on canvas.
-        self.canvas.bind('<Button-1>', self.lmb_click)
 
         # Create and place balls onto the canvas.
         pa.generate_random_balls(self.canvas, self.balls)
-        va.avg_vel = self.return_avg_vel()
-        va.avg_vel_mag = np.linalg.norm(va.avg_vel)
 
-    def return_avg_vel(self):
+        self.user_ball_pos_1 = np.array([0, 0])
+        self.user_ball_pos_2 = np.array([0, 0])
+        self.user_ball_radius = 0
 
-        sum_vel = 0
+        # Listen to LMB click and drag on canvas.
+        self.canvas.bind('<Button-1>', self.lmb_click)
+        self.canvas.bind("<B1-Motion>", self.lmb_drag)
 
-        for ball in self.balls:
-            sum_vel += ball.vel
-
-        return sum_vel / va.num_balls
-
-    # Create a new ball where a LMB click was registered.
+    # Create a new ball where the LMB was clicked.
     def lmb_click(self, event):
 
-        x_coord = event.x
-        y_coord = event.y
+        self.user_ball_pos_1[0] = event.x
+        self.user_ball_pos_1[1] = event.y
 
-        pa.place_ball(self, self.canvas, np.array([x_coord, y_coord]), np.array([0, 0]), 0.1, 1, None)
+        self.user_ball_display = self.canvas.create_oval(self.user_ball_pos_1[0] - self.user_ball_radius, self.user_ball_pos_1[1] - self.user_ball_radius, self.user_ball_pos_2[1] + self.user_ball_radius, self.user_ball_pos_2[1] + self.user_ball_radius, width=0)
+
+        # See: https://stackoverflow.com/questions/50126720/how-do-i-make-lines-by-clicking-dragging-and-releasing-the-mouse-on-tkinter
+
+    # Update ball radius where LMB was dragged.
+    def lmb_drag(self, event):
+
+        self.user_ball_pos_2[0] = event.x
+        self.user_ball_pos_2[1] = event.y
+
+        # Length of hypotenuse of x2 - x1 and y2 - y1
+        self.user_ball_radius = np.hypot(self.user_ball_pos_2[0] - self.user_ball_pos_1[0], self.user_ball_pos_2[1] - self.user_ball_pos_1[1])
+
+        #self.user_ball_display
+
+    def lmb_release(self, event):
+
+        pa.place_ball(self, self.canvas, self.user_ball_pos_1, np.array([0, 0]), self.user_ball_radius, 1)
 
     def update_stats(self):
 
@@ -87,7 +97,10 @@ class Simulation:
 
         for ball in self.balls:
 
-            self.canvas.move(ball.image, ball.vel[0], ball.vel[1])
+            # Move the ball internally
+            ball.pos += ball.vel
+            # Move the ball visually
+            self.canvas.moveto(ball.image, ball.pos[0] - ball.rad, ball.pos[1] - ball.rad)
 
     # TODO: Performance log to test effectiveness
     # ? Access directly from object or assign data to variable
@@ -124,20 +137,21 @@ class Simulation:
 
     def handle_boundary_collisions(self):
 
+        # TODO: wall collision works but leans to the bottom-right
         for ball in self.balls:
 
             if ball.pos[0] - ball.rad < 0:
                 ball.pos[0] = ball.rad
                 ball.vel[0] = -ball.vel[0]
 
-            if ball.pos[0] + ball.rad > 1:
-                ball.pos[0] = 1-ball.rad
+            if ball.pos[0] + ball.rad > 500:
+                ball.pos[0] = 500 - ball.rad
                 ball.vel[0] = -ball.vel[0]
 
             if ball.pos[1] - ball.rad < 0:
                 ball.pos[1] = ball.rad
                 ball.vel[1] = -ball.vel[1]
 
-            if ball.pos[1] + ball.rad > 1:
-                ball.pos[1] = 1-ball.rad
+            if ball.pos[1] + ball.rad > 500:
+                ball.pos[1] = 500 - ball.rad
                 ball.vel[1] = -ball.vel[1]
